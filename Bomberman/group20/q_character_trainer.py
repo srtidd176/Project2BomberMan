@@ -4,6 +4,7 @@ sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 from colorama import Fore, Back
+from StateEval import StateEval
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
 
@@ -18,7 +19,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.tiles = {}
 
         self.q_table = self.load_q_table()
-
+        self.state_eval = StateEval()
         #TODO make alpha real
         self.alpha = 1.0
 
@@ -90,6 +91,24 @@ class Q_Character_Trainer(CharacterEntity):
 
         #Putting this here just until I check out end of life, don't really need to do every time
         self.save_q_table()
+
+
+    def get_delta(self,world):
+        """
+        Gets the delta used for updating weights
+        :return: a float of the difference between states
+        """
+        delta = [r + discount*world2] - world
+        return delta
+
+    def update_weights(self,world,delta):
+        """
+        Updates the weight based on a decay over time for alpha
+        :param world: the world state
+        :param delta: the difference between the new state and the old state value
+        :return: void
+        """
+
 
     def evaluate_q_state(self, wrld, events, action):
         '''

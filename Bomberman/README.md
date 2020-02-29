@@ -7,7 +7,7 @@ packages. To install them, type either
     
 if Python 3 is your default version, or
 
-    pip3 install colorama pygame
+    piw3 install colorama pygame
     
 if you have both Python 2 and Python 3 installed on your system.
 

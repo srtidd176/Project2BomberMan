@@ -1,10 +1,20 @@
 
 class StateEval:
-    def __init__(self, p1,p2,p3,p4):
-        self.p1 = p1
-        self.p2 = p2
-        self.p3 = p3
-        self.p4 = p4
+    def __init__(self, w1,w2,w3,w4):
+        self.w1 = w1
+        self.w2 = w2
+        self.w3 = w3
+        self.w4 = w4
+
+    def update_weights(self,w,alpha,delta,world,character,score1, score2=None):
+        if w == 1:
+            self.w1 = self.w1 + alpha*delta*self.is_death_near(score1,score2,world,character)
+        elif w == 2:
+            self.w2 = self.w2 + alpha*delta*self.is_stalked(score1,world,character)
+        elif w == 3:
+            self.w3 = self.w3 + alpha*delta*self.at_goal(score1,world,character)
+        elif w == 4:
+            self.w4 = self.w4 + alpha*delta*self.at_explosion(score1,world,character)
 
     def is_death_near(self,score1,score2,world,character):
         """
@@ -19,7 +29,7 @@ class StateEval:
         y = character.y
         val = 0
         if world.monsters_at(x,y) != None:
-            val += score1 # TODO test this value
+            val += score1
         if world.monsters_at(x,y+1) != None:
             val += score2
         if world.monsters_at(x,y-1) != None:
@@ -150,5 +160,5 @@ class StateEval:
         val2 = self.is_stalked(s3,world,character)
         val3 = self.at_goal(s4,world,character)
         val4 = self.at_explosion(s5,world,character)
-        final_val = int((self.p1*val1)+(self.p2*val2)+(self.p3*val3)+(self.p4*val4))
+        final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4))
         return final_val
