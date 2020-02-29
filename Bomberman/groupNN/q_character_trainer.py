@@ -104,4 +104,4 @@ class Q_Character_Trainer(CharacterEntity):
         :return q-table: dictionary probably
         '''
         #TODO implement and update docstring
-        pass
+        self.q_table = {} #empty dictionary for if it did not load
