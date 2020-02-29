@@ -1,7 +1,7 @@
 # This is necessary to find the main code
 import sys
 
-from Bomberman.group20.AStar import AStar
+from AStar import AStar
 
 sys.path.insert(0, '../bomberman')
 # Import necessary stuff
@@ -22,6 +22,7 @@ class TestCharacter(CharacterEntity):
 
     def dumb_solution(self, wrld):
         exit = self.find_exit(wrld)
+        self.place_bomb()
         if exit is None:
             self.move(0, 0)
         else:

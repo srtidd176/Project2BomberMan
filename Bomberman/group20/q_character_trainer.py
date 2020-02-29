@@ -4,8 +4,10 @@ sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 from colorama import Fore, Back
+from StateEval import StateEval
 import csv
 import math
+
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
 
@@ -20,9 +22,15 @@ class Q_Character_Trainer(CharacterEntity):
         self.tiles = {}
 
         self.q_table = self.load_q_table()
-
+        self.state_eval = StateEval(3,3,3,3,3)
         #TODO make alpha real
-        self.alpha = 0
+        self.alpha = 1.0
+        self.score1 = 0  # Score for being on same spot as a monster
+        self.score2 = 0  # Score for being in attack distance from monster
+        self.score3 = 0  # Score for bring in stalk distance from monster
+        self.score4 = 0  # Score based on how close the character is to the goal
+        self.score5 = 0  # Score for being on an explosion
+        self.score6 = 0  # Score for optimal bomb placement
         self.alpha_constant = 1
         self.turn_number = 0
 
@@ -94,6 +102,28 @@ class Q_Character_Trainer(CharacterEntity):
         #Putting this here just until I check out end of life, don't really need to do every time
         self.save_q_table()
 
+
+    def get_delta(self,world):
+        """
+        Gets the delta used for updating weights
+        :return: a float of the difference between states
+        """
+        delta = [r + discount*world2] - world #TODO
+        return delta
+
+    def update_weights(self,world,delta):
+        """
+        Updates the weight based on a decay over time for alpha
+        :param world: the world state
+        :param delta: the difference between the new state and the old state value
+        :return: void
+        """
+        self.state_eval.update_weights(1,self.alpha,delta,world,self,self.score1,self.score2)
+        self.state_eval.update_weights(2,self.alpha,delta,world,self,self.score3)
+        self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
+        self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
+        self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
+
     def evaluate_q_state(self, wrld, events, action):
         '''
         :param wrld: World : The world state to evaluate
@@ -148,4 +178,3 @@ class Q_Character_Trainer(CharacterEntity):
             for row in reader:
                 #TODO MAKE SURE THAT THIS DOESN'T INTERPRET IT AS A STRING FOR THE ARRAY, IN THAT CASE WILL NEED ADDITIONAL LOGIC
                 q_table[row[0]] = row[1]
-
