@@ -24,6 +24,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.state_eval = StateEval()
         #TODO make alpha real
         self.alpha = 1.0
+        self.discount = 1.0
 
     def do(self, wrld):
         '''
@@ -97,7 +98,13 @@ class Q_Character_Trainer(CharacterEntity):
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        delta = [r + discount*world2] - world
+        r = 0
+        state_id = ""   # TODO
+
+        all_values = self.q_table.get(state_id)
+        s_eval = self.state_eval()
+        current_state_val =
+        delta = [r + self.discount * world2] - world
         return delta
 
     def update_weights(self,world,delta):
