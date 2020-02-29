@@ -5,6 +5,7 @@ sys.path.insert(0, '../bomberman')
 from entity import CharacterEntity
 from colorama import Fore, Back
 import csv
+import math
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
 
@@ -21,7 +22,9 @@ class Q_Character_Trainer(CharacterEntity):
         self.q_table = self.load_q_table()
 
         #TODO make alpha real
-        self.alpha = 1.0
+        self.alpha = 0
+        self.alpha_constant = 1
+        self.turn_number = 0
 
     def do(self, wrld):
         '''
@@ -31,6 +34,8 @@ class Q_Character_Trainer(CharacterEntity):
         '''
         # TODO make it do
 
+        self.turn_number += 1
+        self.alpha = math.e ** (self.alpha_constant / self.turn_number) #roughly an alpha
         #
         # Get first monster in the world
         # TODO change below if I did this wrong
@@ -109,11 +114,7 @@ class Q_Character_Trainer(CharacterEntity):
         state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB or something idk
         if(state_id in self.q_table):
             all_values = self.q_table.get(state_id)
-            old_value = all_values[action]
-            if(old_value != None):
-                all_values[action] = old_value + self.alpha * value
-            else:
-                all_values[action] = value
+            all_values[action] = value
 
             self.q_table[state_id] = all_values
         else:
