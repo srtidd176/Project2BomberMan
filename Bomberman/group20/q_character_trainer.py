@@ -4,6 +4,7 @@ sys.path.insert(0, '../bomberman')
 # Import necessary stuff
 from entity import CharacterEntity
 from colorama import Fore, Back
+import csv
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
 
@@ -74,7 +75,6 @@ class Q_Character_Trainer(CharacterEntity):
                                 m.move(dx, dy)
                                 # Get new world
                                 (newwrld, events) = wrld.next()
-                                #TODO incorporate below call into factors, value
                                 self.evaluate_q_state(newwrld, events, action)
 
 
@@ -82,12 +82,10 @@ class Q_Character_Trainer(CharacterEntity):
         #TODO figure out place bomb
         # Get new world
         (newwrld, events) = wrld.next()
-        # TODO incorporate below call into factors, value
         self.evaluate_q_state(newwrld, events, 8)
 
 
-
-
+        #TODO make sure this is in the right place when E.O.L. is figured out
         #Putting this here just until I check out end of life, don't really need to do every time
         self.save_q_table()
 
@@ -105,10 +103,10 @@ class Q_Character_Trainer(CharacterEntity):
         '''
         value = 0
         # TODO make value assigned correctly
-        # value = END_WEIGHT * DISTANCE_TO_END + MONSTER_WEIGHT * DISTANCE_TO_MONSTER + BOMB_WEIGHT * DISTANCE_TO_BOMB
+        # value = StateEval.evaluate_state
 
-
-        state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB
+        #TODO make state_id correctly formed
+        state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB or something idk
         if(state_id in self.q_table):
             all_values = self.q_table.get(state_id)
             old_value = all_values[action]
@@ -123,13 +121,19 @@ class Q_Character_Trainer(CharacterEntity):
             all_values[action] = value
             self.q_table[state_id] = all_values
 
+
+
     def save_q_table(self):
         '''
         saves the q-table to a local storage
         :return: void
         '''
-        #TODO implement
-        pass
+        with open('q_table.csv', 'w', newline='') as file:
+            writer = csv.writer(file, 'w', delimiter=',', newline='')
+            for key in self.q_table:
+                writer.writerow(key, self.q_table.get(key))
+
+
 
     def load_q_table(self):
         '''
@@ -138,3 +142,9 @@ class Q_Character_Trainer(CharacterEntity):
         '''
         #TODO implement and update docstring
         q_table = {} #default empty dictionary if not loaded from save
+        with open('q_table.csv', 'w', newlilne='') as file:
+            reader = csv.reader(file, delimiter=',')
+            for row in reader:
+                #TODO MAKE SURE THAT THIS DOESN'T INTERPRET IT AS A STRING FOR THE ARRAY, IN THAT CASE WILL NEED ADDITIONAL LOGIC
+                q_table[row[0]] = row[1]
+
