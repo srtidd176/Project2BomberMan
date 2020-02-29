@@ -6,6 +6,7 @@ from entity import CharacterEntity
 from colorama import Fore, Back
 from StateEval import StateEval
 import csv
+import math
 
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
@@ -22,7 +23,7 @@ class Q_Character_Trainer(CharacterEntity):
 
         self.q_table = self.load_q_table()
         self.state_eval = StateEval(3,3,3,3,3)
-        #TODO make alpha real
+        #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
         self.score1 = 0  # Score for being on same spot as a monster
         self.score2 = 0  # Score for being in attack distance from monster
@@ -30,7 +31,8 @@ class Q_Character_Trainer(CharacterEntity):
         self.score4 = 0  # Score based on how close the character is to the goal
         self.score5 = 0  # Score for being on an explosion
         self.score6 = 0  # Score for optimal bomb placement
-
+        self.alpha_constant = 1
+        self.turn_number = 0
 
     def do(self, wrld):
         '''
@@ -40,6 +42,8 @@ class Q_Character_Trainer(CharacterEntity):
         '''
         # TODO make it do
 
+        self.turn_number += 1
+        self.alpha = math.e ** (self.alpha_constant / self.turn_number) #roughly an alpha
         #
         # Get first monster in the world
         # TODO change below if I did this wrong
@@ -142,11 +146,7 @@ class Q_Character_Trainer(CharacterEntity):
         state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB or something idk
         if(state_id in self.q_table):
             all_values = self.q_table.get(state_id)
-            old_value = all_values[action]
-            if(old_value != None):
-                all_values[action] = old_value + self.alpha * value
-            else:
-                all_values[action] = value
+            all_values[action] = value
 
             self.q_table[state_id] = all_values
         else:
@@ -164,7 +164,9 @@ class Q_Character_Trainer(CharacterEntity):
         with open('q_table.csv', 'w', newline='') as file:
             writer = csv.writer(file, 'w', delimiter=',', newline='')
             for key in self.q_table:
-                writer.writerow(key, self.q_table.get(key))
+                values = self.q_table.get(key)
+                writer.writerow(key, values[0], values[1], values[2], values[3],
+                                values[4], values[5], values[6], values[7], values[8])
 
 
 
@@ -178,6 +180,4 @@ class Q_Character_Trainer(CharacterEntity):
         with open('q_table.csv', 'w', newlilne='') as file:
             reader = csv.reader(file, delimiter=',')
             for row in reader:
-                #TODO MAKE SURE THAT THIS DOESN'T INTERPRET IT AS A STRING FOR THE ARRAY, IN THAT CASE WILL NEED ADDITIONAL LOGIC
-                q_table[row[0]] = row[1]
-
+                q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
