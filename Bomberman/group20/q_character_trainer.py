@@ -5,6 +5,9 @@ sys.path.insert(0, '../bomberman')
 from entity import CharacterEntity
 from colorama import Fore, Back
 
+EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
+
+
 class Q_Character_Trainer(CharacterEntity):
 
     def __init__(self, name, avatar, x, y):
@@ -14,9 +17,10 @@ class Q_Character_Trainer(CharacterEntity):
         # Debugging elements
         self.tiles = {}
 
-        # TODO make real table. Probably factors | (dx/dy OR bomb)
-        # q_table = TABLE -- probably a dictionary of state/action pairs
         self.q_table = self.load_q_table()
+
+        #TODO make alpha real
+        self.alpha = 1.0
 
     def do(self, wrld):
         '''
@@ -30,6 +34,11 @@ class Q_Character_Trainer(CharacterEntity):
         # Get first monster in the world
         # TODO change below if I did this wrong
         m = wrld.me(self)
+
+        #Action is a number between 0 and 8. 0 for north and going clockwise at diagonal, then 8 is bomb
+        #Reword if not clear
+        action = 0
+
         #
         # Go through the possible 8-moves of the monster
         # Loop through delta x
@@ -44,51 +53,75 @@ class Q_Character_Trainer(CharacterEntity):
                         if (m.y + dy >= 0) and (m.y + dy < wrld.height()):
                             # No need to check impossible moves
                             if not wrld.wall_at(m.x + dx, m.y + dy):
+                                if(dx == 0 and dy == 1):
+                                    action = 0
+                                elif(dx == 1 and dy == 1):
+                                    action = 1
+                                elif (dx == 1 and dy == 0):
+                                    action = 2
+                                elif (dx == 1 and dy == -1):
+                                    action = 3
+                                elif (dx == 0 and dy == -1):
+                                    action = 4
+                                elif (dx == -1 and dy == -1):
+                                    action = 5
+                                elif (dx == -1 and dy == 0):
+                                    aciton = 6
+                                elif (dx == -1 and dy == 1):
+                                    action = 7
+
                                 # Set move in wrld
                                 m.move(dx, dy)
                                 # Get new world
                                 (newwrld, events) = wrld.next()
                                 #TODO incorporate below call into factors, value
-                                self.evaluate_q_state(newwrld, events)
+                                self.evaluate_q_state(newwrld, events, action)
 
-                                #TODO check pull of (factors) + (action) and then update
-                                #q_value = q_table.get( (FACTORS) )
-                                #q_value = UPDATE
-                                #q_table.put( (FACTORS), q_value)
 
         #Check Bomb
         #TODO figure out place bomb
         # Get new world
         (newwrld, events) = wrld.next()
         # TODO incorporate below call into factors, value
-        self.evaluate_q_state(newwrld, events)
+        self.evaluate_q_state(newwrld, events, 8)
 
-        # TODO check pull of (factors) + (action) and then update
-        # q_value = q_table.get( (FACTORS) )
-        # q_value = UPDATE
-        # q_table.put( (FACTORS), q_value)
 
 
 
         #Putting this here just until I check out end of life, don't really need to do every time
         self.save_q_table()
 
-    def evaluate_q_state(self, wrld, events):
+    def evaluate_q_state(self, wrld, events, action):
         '''
         :param wrld: World : The world state to evaluate
         :param events: The events that just occured in this state
+        :param action: The action just taken
         Evaluates the state that the character is in based on X factors:
         Proximity to end
         Proximity to monster
         Proximity to bomb
         ADD MORE AS NEEDED
-        :return: float for state value
+        :return: void
         '''
         value = 0
-        #TODO make value assigned correctly
-        #value = END_WEIGHT * DISTANCE_TO_END + MONSTER_WEIGHT * DISTANCE_TO_MONSTER + BOMB_WEIGHT * DISTANCE_TO_BOMB
+        # TODO make value assigned correctly
+        # value = END_WEIGHT * DISTANCE_TO_END + MONSTER_WEIGHT * DISTANCE_TO_MONSTER + BOMB_WEIGHT * DISTANCE_TO_BOMB
 
-        #TODO format return for the state's factors & value
+
+        state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB
+        if(state_id in self.q_table):
+            all_values = self.q_table.get(state_id)
+            old_value = all_values[action]
+            if(old_value != None):
+                all_values[action] = old_value + self.alpha * value
+            else:
+                all_values[action] = value
+
+            self.q_table[state_id] = all_values
+        else:
+            all_values = EMPTY_ACTION_SET
+            all_values[action] = value
+            self.q_table[state_id] = all_values
 
     def save_q_table(self):
         '''
@@ -104,4 +137,4 @@ class Q_Character_Trainer(CharacterEntity):
         :return q-table: dictionary probably
         '''
         #TODO implement and update docstring
-        pass
+        q_table = {} #default empty dictionary if not loaded from save
