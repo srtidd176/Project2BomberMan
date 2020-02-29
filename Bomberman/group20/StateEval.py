@@ -23,9 +23,11 @@ class StateEval:
         elif w == 2:
             self.w2 = self.w2 + alpha*delta*self.is_stalked(score1,world,character)
         elif w == 3:
-            self.w3 = self.w3 + alpha*delta*self.at_goal(score1,world,character)
+            self.w3 = self.w3 + alpha*delta*self.dist_goal(score1,world,character)
         elif w == 4:
             self.w4 = self.w4 + alpha*delta*self.at_explosion(score1,world,character)
+        elif w == 5:
+            self.w5 = self.w5 + alpha * delta * self.bomb_placement(score1, world, character)
 
     def is_death_near(self,score1,score2,world,character):
         """

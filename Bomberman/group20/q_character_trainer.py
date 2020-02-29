@@ -107,6 +107,7 @@ class Q_Character_Trainer(CharacterEntity):
         delta = [r + discount*world2] - world #TODO
         return delta
 
+
     def update_weights(self,world,delta):
         """
         Updates the weight based on a decay over time for alpha
@@ -119,6 +120,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
         self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
         self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
+
 
     def evaluate_q_state(self, wrld, events, action):
         '''
