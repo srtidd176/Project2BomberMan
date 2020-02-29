@@ -21,9 +21,16 @@ class Q_Character_Trainer(CharacterEntity):
         self.tiles = {}
 
         self.q_table = self.load_q_table()
-        self.state_eval = StateEval()
+        self.state_eval = StateEval(3,3,3,3,3)
         #TODO make alpha real
         self.alpha = 1.0
+        self.score1 = 0  # Score for being on same spot as a monster
+        self.score2 = 0  # Score for being in attack distance from monster
+        self.score3 = 0  # Score for bring in stalk distance from monster
+        self.score4 = 0  # Score based on how close the character is to the goal
+        self.score5 = 0  # Score for being on an explosion
+        self.score6 = 0  # Score for optimal bomb placement
+
 
     def do(self, wrld):
         '''
@@ -97,7 +104,7 @@ class Q_Character_Trainer(CharacterEntity):
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        delta = [r + discount*world2] - world
+        delta = [r + discount*world2] - world #TODO
         return delta
 
     def update_weights(self,world,delta):
@@ -107,7 +114,11 @@ class Q_Character_Trainer(CharacterEntity):
         :param delta: the difference between the new state and the old state value
         :return: void
         """
-
+        self.state_eval.update_weights(1,self.alpha,delta,world,self,self.score1,self.score2)
+        self.state_eval.update_weights(2,self.alpha,delta,world,self,self.score3)
+        self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
+        self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
+        self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
 
     def evaluate_q_state(self, wrld, events, action):
         '''

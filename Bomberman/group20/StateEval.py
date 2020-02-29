@@ -7,6 +7,17 @@ class StateEval:
         self.w4 = w4
 
     def update_weights(self,w,alpha,delta,world,character,score1, score2=None):
+        """
+
+        :param w:
+        :param alpha:
+        :param delta:
+        :param world:
+        :param character:
+        :param score1:
+        :param score2:
+        :return:
+        """
         if w == 1:
             self.w1 = self.w1 + alpha*delta*self.is_death_near(score1,score2,world,character)
         elif w == 2:
