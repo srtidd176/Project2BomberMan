@@ -6,6 +6,7 @@ from entity import CharacterEntity
 from colorama import Fore, Back
 from StateEval import StateEval
 import csv
+import math
 
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
@@ -21,10 +22,19 @@ class Q_Character_Trainer(CharacterEntity):
         self.tiles = {}
 
         self.q_table = self.load_q_table()
-        self.state_eval = StateEval()
+        self.state_eval = StateEval(3,3,3,3,3)
         #TODO make alpha real
         self.alpha = 1.0
         self.discount = 1.0
+        self.score1 = 0  # Score for being on same spot as a monster
+        self.score2 = 0  # Score for being in attack distance from monster
+        self.score3 = 0  # Score for bring in stalk distance from monster
+        self.score4 = 0  # Score based on how close the character is to the goal
+        self.score5 = 0  # Score for being on an explosion
+        self.score6 = 0  # Score for optimal bomb placement
+        self.alpha_constant = 1
+        self.turn_number = 0
+        self.goal = None
 
     def do(self, wrld):
         '''
@@ -33,7 +43,18 @@ class Q_Character_Trainer(CharacterEntity):
         :return: void
         '''
         # TODO make it do
+        if self.goal is None:
+            for x in range(wrld.width):
+                for y in range(wrld.height):
+                    if wrld.exit_at(x, y):
+                        self.goal = [x, y]
+                        break
+                else:
+                    continue
+                break
 
+        self.turn_number += 1
+        self.alpha = math.e ** (self.alpha_constant / self.turn_number) #roughly an alpha
         #
         # Get first monster in the world
         # TODO change below if I did this wrong
@@ -102,9 +123,10 @@ class Q_Character_Trainer(CharacterEntity):
         state_id = ""   # TODO
 
         all_values = self.q_table.get(state_id)
-        s_eval = self.state_eval()
-        current_state_val =
-        delta = [r + self.discount * world2] - world
+        current_state_val = self.state_eval.evaluate_state(
+            self.s1,self.s2,self.s3,self.s4,self.s5,self.s6,world,self.goal,self)
+        max_index = all_values.index(max(all_values))
+        delta = (r + self.discount * all_values[max_index]) - current_state_val
         return delta
 
     def update_weights(self,world,delta):
@@ -114,7 +136,11 @@ class Q_Character_Trainer(CharacterEntity):
         :param delta: the difference between the new state and the old state value
         :return: void
         """
-
+        self.state_eval.update_weights(1,self.alpha,delta,world,self,self.score1,self.score2)
+        self.state_eval.update_weights(2,self.alpha,delta,world,self,self.score3)
+        self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
+        self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
+        self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
 
     def evaluate_q_state(self, wrld, events, action):
         '''
@@ -136,11 +162,7 @@ class Q_Character_Trainer(CharacterEntity):
         state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB or something idk
         if(state_id in self.q_table):
             all_values = self.q_table.get(state_id)
-            old_value = all_values[action]
-            if(old_value != None):
-                all_values[action] = old_value + self.alpha * value
-            else:
-                all_values[action] = value
+            all_values[action] = value
 
             self.q_table[state_id] = all_values
         else:
@@ -174,4 +196,3 @@ class Q_Character_Trainer(CharacterEntity):
             for row in reader:
                 #TODO MAKE SURE THAT THIS DOESN'T INTERPRET IT AS A STRING FOR THE ARRAY, IN THAT CASE WILL NEED ADDITIONAL LOGIC
                 q_table[row[0]] = row[1]
-
