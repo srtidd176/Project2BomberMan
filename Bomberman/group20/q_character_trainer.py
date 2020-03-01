@@ -23,7 +23,7 @@ class Q_Character_Trainer(CharacterEntity):
 
         self.q_table = self.load_q_table()
         self.state_eval = StateEval(3,3,3,3,3)
-        #TODO make alpha real
+        #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
         self.discount = 1.0
         self.score1 = 0  # Score for being on same spot as a monster
@@ -129,6 +129,7 @@ class Q_Character_Trainer(CharacterEntity):
         delta = (r + self.discount * all_values[max_index]) - current_state_val
         return delta
 
+
     def update_weights(self,world,delta):
         """
         Updates the weight based on a decay over time for alpha
@@ -141,6 +142,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
         self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
         self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
+
 
     def evaluate_q_state(self, wrld, events, action):
         '''
@@ -180,7 +182,9 @@ class Q_Character_Trainer(CharacterEntity):
         with open('q_table.csv', 'w', newline='') as file:
             writer = csv.writer(file, 'w', delimiter=',', newline='')
             for key in self.q_table:
-                writer.writerow(key, self.q_table.get(key))
+                values = self.q_table.get(key)
+                writer.writerow(key, values[0], values[1], values[2], values[3],
+                                values[4], values[5], values[6], values[7], values[8])
 
 
 
@@ -194,5 +198,4 @@ class Q_Character_Trainer(CharacterEntity):
         with open('q_table.csv', 'w', newlilne='') as file:
             reader = csv.reader(file, delimiter=',')
             for row in reader:
-                #TODO MAKE SURE THAT THIS DOESN'T INTERPRET IT AS A STRING FOR THE ARRAY, IN THAT CASE WILL NEED ADDITIONAL LOGIC
-                q_table[row[0]] = row[1]
+                q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
