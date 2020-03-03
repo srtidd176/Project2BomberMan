@@ -119,7 +119,7 @@ class Q_Character_Trainer(CharacterEntity):
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        r = 0
+        r = world.scorces.get(self.name)
         state_id = ""   # TODO
 
         all_values = self.q_table.get(state_id)
@@ -186,6 +186,10 @@ class Q_Character_Trainer(CharacterEntity):
                 writer.writerow(key, values[0], values[1], values[2], values[3],
                                 values[4], values[5], values[6], values[7], values[8])
 
+
+    def generate_state_id(self, world):
+        state_id = ""
+        return state_id
 
 
     def load_q_table(self):
