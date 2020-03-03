@@ -104,14 +104,11 @@ class Q_Character_Trainer(CharacterEntity):
 
         #Check Bomb
         #TODO figure out place bomb
+        m.place_bomb()
         # Get new world
         (newwrld, events) = wrld.next()
         self.evaluate_q_state(newwrld, events, 8)
 
-
-        #TODO make sure this is in the right place when E.O.L. is figured out
-        #Putting this here just until I check out end of life, don't really need to do every time
-        self.save_q_table()
 
 
     def get_delta(self,world):
@@ -156,12 +153,9 @@ class Q_Character_Trainer(CharacterEntity):
         ADD MORE AS NEEDED
         :return: void
         '''
-        value = 0
-        # TODO make value assigned correctly
-        # value = StateEval.evaluate_state
+        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, wrld, self.goal, self)
 
-        #TODO make state_id correctly formed
-        state_id = "" #DISTANCE_TO_END + DISTANCE_TO_MONSTER + DISTANCE_TO_BOMB or something idk
+        state_id = self.generate_state_id(wrld)
         if(state_id in self.q_table):
             all_values = self.q_table.get(state_id)
             all_values[action] = value
@@ -241,9 +235,8 @@ class Q_Character_Trainer(CharacterEntity):
     def load_q_table(self):
         '''
         loads the q-table from local storage
-        :return q-table: dictionary probably
+        :return dictionary: dictionary for the q-table
         '''
-        #TODO implement and update docstring
         q_table = {} #default empty dictionary if not loaded from save
         with open('q_table.csv', 'w', newlilne='') as file:
             reader = csv.reader(file, delimiter=',')
@@ -271,3 +264,6 @@ class Q_Character_Trainer(CharacterEntity):
                         counter += 1
 
         return counter
+
+    def done(self):
+        self.save_q_table()
