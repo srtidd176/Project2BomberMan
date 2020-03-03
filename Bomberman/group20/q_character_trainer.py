@@ -190,7 +190,7 @@ class Q_Character_Trainer(CharacterEntity):
         state_id = ""
         char_dist = self.char_dist()
         state_id += str(int(char_dist)) + ","
-        num_monst_nearby = 0
+        num_monst_nearby = self.get_num_monsters_nearby(world)
         state_id += str(int(num_monst_nearby)) + ","
         walls_in_range = self.walls_in_range(world)
         state_id += str(int(walls_in_range)) + ","
@@ -215,6 +215,29 @@ class Q_Character_Trainer(CharacterEntity):
                 num_walls += 1
         return num_walls
 
+    def bomb_danger(self,world,character):
+        """
+        Gives the state id with respect to the character being close to a bomb and the bomb's timer
+        :param world: the world state
+        :param character: the main character
+        :return: int
+        """
+        if world.bombs == 0:
+            return -1
+        for pos in range(0,5):
+            if world.bomb_at(character.x+pos,character.y):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x-pos,character.y):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x,character.y+pos):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x,character.y-pos):
+                return world.bomb_time
+        return -1
+
     def load_q_table(self):
         '''
         loads the q-table from local storage
@@ -226,3 +249,25 @@ class Q_Character_Trainer(CharacterEntity):
             reader = csv.reader(file, delimiter=',')
             for row in reader:
                 q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+
+
+    def get_num_monsters_nearby(self, wrld):
+        '''
+        Get the number of monsters within a 2 block square
+        :param wrld: The game world
+        :return int: the number of monsters within 2 block square
+        '''
+
+        min_x = self.x - 2
+        max_x = self.x + 2
+        min_y = self.y - 2
+        max_y = self.y + 2
+        counter = 0
+
+        for char in wrld.characters:
+            if char != self: #if this isn't valid check char.name vs. self.name
+                if(char.x >= min_x and char.x <= max_x):
+                    if(char.y >= min_y and char.y <= max_y):
+                        counter+=1
+
+        return counter
