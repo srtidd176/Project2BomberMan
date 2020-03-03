@@ -194,7 +194,7 @@ class Q_Character_Trainer(CharacterEntity):
         state_id += str(int(num_monst_nearby)) + ","
         walls_in_range = self.walls_in_range(world)
         state_id += str(int(walls_in_range)) + ","
-        bomb_danger = 0
+        bomb_danger = self.bomb_danger(world)
         state_id += str(int(bomb_danger))
         return state_id
 
@@ -215,7 +215,7 @@ class Q_Character_Trainer(CharacterEntity):
                 num_walls += 1
         return num_walls
 
-    def bomb_danger(self,world,character):
+    def bomb_danger(self,world):
         """
         Gives the state id with respect to the character being close to a bomb and the bomb's timer
         :param world: the world state
@@ -225,16 +225,16 @@ class Q_Character_Trainer(CharacterEntity):
         if world.bombs == 0:
             return -1
         for pos in range(0,5):
-            if world.bomb_at(character.x+pos,character.y):
+            if world.bomb_at(self.x+pos,self.y):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x-pos,character.y):
+            if world.bomb_at(self.x-pos,self.y):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x,character.y+pos):
+            if world.bomb_at(self.x,self.y+pos):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x,character.y-pos):
+            if world.bomb_at(self.x,self.y-pos):
                 return world.bomb_time
         return -1
 
