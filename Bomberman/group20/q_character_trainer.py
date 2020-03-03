@@ -120,7 +120,7 @@ class Q_Character_Trainer(CharacterEntity):
         :return: a float of the difference between states
         """
         r = world.scorces.get(self.name)
-        state_id = ""   # TODO
+        state_id = self.generate_state_id(world)
 
         all_values = self.q_table.get(state_id)
         current_state_val = self.state_eval.evaluate_state(
@@ -189,6 +189,14 @@ class Q_Character_Trainer(CharacterEntity):
 
     def generate_state_id(self, world):
         state_id = ""
+        char_dist = 0
+        state_id += str(int(char_dist)) + ","
+        num_monst_nearby = 0
+        state_id += str(int(num_monst_nearby)) + ","
+        walls_in_range = 0
+        state_id += str(int(walls_in_range)) + ","
+        bomb_danger = 0
+        state_id += str(int(bomb_danger))
         return state_id
 
 
