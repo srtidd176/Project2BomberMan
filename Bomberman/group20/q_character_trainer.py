@@ -200,6 +200,29 @@ class Q_Character_Trainer(CharacterEntity):
         return state_id
 
 
+    def bomb_danger(self,world,character):
+        """
+        Gives the state id with respect to the character being close to a bomb and the bomb's timer
+        :param world: the world state
+        :param character: the main character
+        :return: int
+        """
+        if world.bombs == 0:
+            return -1
+        for pos in range(0,5):
+            if world.bomb_at(character.x+pos,character.y):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x-pos,character.y):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x,character.y+pos):
+                return world.bomb_time
+        for pos in range(0,5):
+            if world.bomb_at(character.x,character.y-pos):
+                return world.bomb_time
+        return -1
+
     def load_q_table(self):
         '''
         loads the q-table from local storage
