@@ -26,12 +26,12 @@ class Q_Character_Trainer(CharacterEntity):
         #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
         self.discount = 1.0
-        self.score1 = 0  # Score for being on same spot as a monster
-        self.score2 = 0  # Score for being in attack distance from monster
-        self.score3 = 0  # Score for bring in stalk distance from monster
-        self.score4 = 0  # Score based on how close the character is to the goal
-        self.score5 = 0  # Score for being on an explosion
-        self.score6 = 0  # Score for optimal bomb placement
+        self.score1 = 10  # Score for being on same spot as a monster
+        self.score2 = 1  # Score for being in attack distance from monster
+        self.score3 = 1  # Score for bring in stalk distance from monster
+        self.score4 = 1  # Score based on how close the character is to the goal
+        self.score5 = 1  # Score for being on an explosion
+        self.score6 = 1  # Score for optimal bomb placement
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
