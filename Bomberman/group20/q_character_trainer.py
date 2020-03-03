@@ -35,6 +35,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
+        self.old_score =
 
     def do(self, wrld):
         '''
@@ -116,7 +117,8 @@ class Q_Character_Trainer(CharacterEntity):
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        r = world.scorces.get(self.name)
+        r = world.scorces.get(self.name) - self.old_score
+        self.old_score = world.scores.get(self.name)
         state_id = self.generate_state_id(world)
 
         all_values = self.q_table.get(state_id)
