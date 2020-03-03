@@ -264,10 +264,10 @@ class Q_Character_Trainer(CharacterEntity):
         max_y = self.y + 2
         counter = 0
 
-        for char in wrld.characters:
-            if char != self: #if this isn't valid check char.name vs. self.name
-                if(char.x >= min_x and char.x <= max_x):
-                    if(char.y >= min_y and char.y <= max_y):
-                        counter+=1
+        for x in range(min_x, max_x+1):
+            for y in range(min_y, max_y+1):
+                if (x != self.x and y != self.y):
+                    if wrld.monsters_at(x, y) != None:
+                        counter += 1
 
         return counter
