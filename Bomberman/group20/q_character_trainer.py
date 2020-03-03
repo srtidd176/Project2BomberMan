@@ -186,21 +186,36 @@ class Q_Character_Trainer(CharacterEntity):
                 writer.writerow(key, values[0], values[1], values[2], values[3],
                                 values[4], values[5], values[6], values[7], values[8])
 
-
     def generate_state_id(self, world):
         state_id = ""
-        char_dist = 0
+        char_dist = self.char_dist()
         state_id += str(int(char_dist)) + ","
         num_monst_nearby = self.get_num_monsters_nearby(world)
         state_id += str(int(num_monst_nearby)) + ","
-        walls_in_range = 0
+        walls_in_range = self.walls_in_range(world)
         state_id += str(int(walls_in_range)) + ","
-        bomb_danger = 0
+        bomb_danger = self.bomb_danger(world)
         state_id += str(int(bomb_danger))
         return state_id
 
+    def char_dist(self):
+        x_dist = float(self.goal[0] - self.x)
+        y_dist = float(self.goal[1] - self.y)
+        sq_dist = x_dist*x_dist + y_dist*y_dist
+        return int(sq_dist)
 
-    def bomb_danger(self,world,character):
+    def walls_in_range(self, world):
+        num_walls = 0
+        for d in range(1, 5):
+            if world.wall_at(self.x, self.y + d):
+                num_walls += 1
+            if world.wall_at(self.x + d, self.y):
+                num_walls += 1
+            if world.wall_at(self.x - d, self.y)
+                num_walls += 1
+        return num_walls
+
+    def bomb_danger(self,world):
         """
         Gives the state id with respect to the character being close to a bomb and the bomb's timer
         :param world: the world state
@@ -210,16 +225,16 @@ class Q_Character_Trainer(CharacterEntity):
         if world.bombs == 0:
             return -1
         for pos in range(0,5):
-            if world.bomb_at(character.x+pos,character.y):
+            if world.bomb_at(self.x+pos,self.y):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x-pos,character.y):
+            if world.bomb_at(self.x-pos,self.y):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x,character.y+pos):
+            if world.bomb_at(self.x,self.y+pos):
                 return world.bomb_time
         for pos in range(0,5):
-            if world.bomb_at(character.x,character.y-pos):
+            if world.bomb_at(self.x,self.y-pos):
                 return world.bomb_time
         return -1
 
