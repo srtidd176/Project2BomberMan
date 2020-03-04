@@ -276,13 +276,16 @@ class Q_Character_Trainer(CharacterEntity):
         :return dictionary: dictionary for the q-table
         '''
         self.q_table = {} #default empty dictionary if not loaded from save
-        try:
-            with open('q_table.csv', 'r+') as file:
-                reader = csv.reader(file, delimiter=',')
-                for row in reader:
-                    self.q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
-        except:
-            pass
+        with open('q_table.csv', 'r+') as file:
+            reader = csv.reader(file, delimiter=',')
+            for row in reader:
+                temp_list = []
+                for i in range(1, 10):
+                    temp_list.append(row[i])
+                self.q_table[row[0]] = temp_list
+            print(self.q_table)
+
+
 
 
 
