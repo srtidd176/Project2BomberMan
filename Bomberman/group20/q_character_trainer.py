@@ -7,6 +7,7 @@ from colorama import Fore, Back
 from StateEval import StateEval
 import csv
 import math
+import random
 sys.path.insert(1, '../group20')
 
 EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None, None]
@@ -36,7 +37,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
-        self.old_score = 0
+        self.old_score = -5000
 
     def do(self, wrld):
         '''
@@ -55,9 +56,9 @@ class Q_Character_Trainer(CharacterEntity):
                     continue
                 break
 
-        self.turn_number += 1
-        self.alpha = math.e ** (self.alpha_constant / self.turn_number) #roughly an alpha
-        #
+        #self.turn_number += 1
+        #self.alpha = math.e ** (self.alpha_constant / self.turn_number) #roughly an alpha
+        self.alpha = 0.3
         # Get first monster in the world
         # TODO change below if I did this wrong
         m = wrld.me(self)
@@ -93,7 +94,7 @@ class Q_Character_Trainer(CharacterEntity):
                                 elif (dx == -1 and dy == -1):
                                     action = 5
                                 elif (dx == -1 and dy == 0):
-                                    aciton = 6
+                                    action = 6
                                 elif (dx == -1 and dy == 1):
                                     action = 7
 
@@ -111,53 +112,126 @@ class Q_Character_Trainer(CharacterEntity):
         (newwrld, events) = wrld.next()
         self.evaluate_q_state(wrld, newwrld, events, 8)
 
-        self.make_best_move(self.generate_state_id(wrld))
+        rand_chance = random.random()
+        if(rand_chance > 0.8):
+            self.make_best_move(self.generate_state_id(wrld), wrld)
+        else:
+            rand_action = random.randint(0, 8)
+            self.make_a_move(rand_action)
 
-    def make_best_move(self, board_state):
+        delta = self.get_delta(wrld)
+        self.update_weights(wrld, delta)
+
+    def make_best_move(self, board_state, wrld):
         moves = self.q_table.get(board_state)
         maximum = moves[0]
         max_index = 0
         for i in range(0, len(moves)):
             try:
                 if moves[i] > maximum:
-                    max_index = i
+                    if(self.is_legal_move(wrld, i)):
+                        maximum = moves[i]
+                        max_index = i
             except:
                 pass
-        if max_index == 0:
+        self.make_a_move(max_index)
+
+    def is_legal_move(self, wrld, action):
+        if(action == 0):
+            if(self.y + 1 < wrld.height() and (not wrld.wall_at(self.x, self.y + 1))):
+                return True
+            else:
+                return False
+        elif(action == 1):
+            if (self.y + 1 < wrld.height() and self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y + 1))):
+                return True
+            else:
+                return False
+        elif(action == 2):
+            if (self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y ))):
+                return True
+            else:
+                return False
+        elif(action == 3):
+            if (self.y - 1 >= 0 and self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y - 1))):
+                return True
+            else:
+                return False
+        elif(action == 4):
+            if (self.y + 1 >= 0 and (not wrld.wall_at(self.x , self.y - 1))):
+                return True
+            else:
+                return False
+        elif(action == 5):
+            if (self.y - 1 >= 0 and self.x >= 0 and (not wrld.wall_at(self.x - 1, self.y - 1))):
+                return True
+            else:
+                return False
+        elif(action == 6):
+            if (self.x >= 0 and (not wrld.wall_at(self.x - 1, self.y))):
+                return True
+            else:
+                return False
+        elif(action == 7):
+            if (self.y + 1 < wrld.height() and self.x >= 0 and (not wrld.wall_at(self.x - 1, self.y + 1))):
+                return True
+            else:
+                return False
+
+        return False
+
+    def make_a_move(self, move_index):
+        if move_index == 0:
             self.move(0, 1)
-        elif max_index == 1:
+        elif move_index == 1:
             self.move(1, 1)
-        elif max_index == 2:
+        elif move_index == 2:
             self.move(1, 0)
-        elif max_index == 3:
+        elif move_index == 3:
             self.move(1, -1)
-        elif max_index == 4:
+        elif move_index == 4:
             self.move(0, -1)
-        elif max_index == 5:
+        elif move_index == 5:
             self.move(-1, -1)
-        elif max_index == 6:
+        elif move_index == 6:
             self.move(-1, 0)
-        elif max_index == 7:
+        elif move_index == 7:
             self.move(-1, 1)
-        elif max_index == 8:
+        elif move_index == 8:
             self.place_bomb()
 
-
-
-    def get_delta(self,world):
+    def get_delta(self,world, dead=False):
         """
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        r = world.scorces.get(self.name) - self.old_score
-        self.old_score = world.scores.get(self.name)
+        if(not dead):
+            r = world.scores.get(self.name) - self.old_score
+            self.old_score = world.scores.get(self.name)
+        else:
+            r = -9999
         state_id = self.generate_state_id(world)
 
         all_values = self.q_table.get(state_id)
         current_state_val = self.state_eval.evaluate_state(
-            self.s1,self.s2,self.s3,self.s4,self.s5,self.s6,world,self.goal,self)
-        max_index = all_values.index(max(all_values))
+            self.score1,self.score2,self.score3,self.score4,self.score5,self.score6,world,self.goal,self)
+        #max_index = all_values.index(max(all_values))
+
+        max_val = all_values[0]
+        max_index = 0
+
+        for i in range(0, len(all_values)):
+            if all_values[i] != None:
+                if max_val == None:
+                    max_val = all_values[i]
+                    max_index = i
+                elif all_values[i] > max_val:
+                    max_val = all_values[i]
+                    max_index = i
+        print("max index", max_index)
+
         delta = (r + self.discount * all_values[max_index]) - current_state_val
+        print("delta stuff: ", r, self.discount, all_values[max_index], current_state_val, delta)
         return delta
 
 
@@ -168,11 +242,11 @@ class Q_Character_Trainer(CharacterEntity):
         :param delta: the difference between the new state and the old state value
         :return: void
         """
-        self.state_eval.update_weights(1,self.alpha,delta,world,self,self.score1,self.score2)
-        self.state_eval.update_weights(2,self.alpha,delta,world,self,self.score3)
-        self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4)
-        self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5)
-        self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
+        self.state_eval.update_weights(1,self.alpha,delta,world,self,self.score1, self.goal, self.score2)
+        self.state_eval.update_weights(2,self.alpha,delta,world,self,self.score3, self.goal)
+        self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4, self.goal)
+        self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5, self.goal)
+        self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6, self.goal)
 
 
     def evaluate_q_state(self, wrld, newwrld, events, action):
@@ -234,16 +308,19 @@ class Q_Character_Trainer(CharacterEntity):
         x_dist = float(self.goal[0] - self.x)
         y_dist = float(self.goal[1] - self.y)
         sq_dist = x_dist*x_dist + y_dist*y_dist
-        return int(sq_dist)
+        if(sq_dist != 0):
+            return int(1/sq_dist)
+        else:
+            return 0
 
     def walls_in_range(self, world):
         num_walls = 0
         for d in range(1, 5):
-            if world.wall_at(self.x, self.y + d):
+            if (self.y + d < world.height()) and world.wall_at(self.x, self.y + d):
                 num_walls += 1
-            if world.wall_at(self.x + d, self.y):
+            if (self.x + d < world.width()) and world.wall_at(self.x + d, self.y):
                 num_walls += 1
-            if world.wall_at(self.x - d, self.y):
+            if (self.x - d >= 0) and world.wall_at(self.x - d, self.y):
                 num_walls += 1
         return num_walls
 
@@ -276,14 +353,21 @@ class Q_Character_Trainer(CharacterEntity):
         :return dictionary: dictionary for the q-table
         '''
         self.q_table = {} #default empty dictionary if not loaded from save
-        with open('q_table.csv', 'r+') as file:
-            reader = csv.reader(file, delimiter=',')
-            for row in reader:
-                temp_list = []
-                for i in range(1, 10):
-                    temp_list.append(row[i])
-                self.q_table[row[0]] = temp_list
-            print(self.q_table)
+        try:
+            with open('q_table.csv', 'r+') as file:
+                reader = csv.reader(file, delimiter=',')
+                for row in reader:
+                    temp_list = []
+                    for i in range(1, 10):
+                        try:
+                            temp_list.append(float(row[i]))
+                        except:
+                            temp_list.append(None)
+
+                    self.q_table[row[0]] = temp_list
+                print(self.q_table)
+        except:
+            print("couldn't find q table")
 
 
 
@@ -312,4 +396,7 @@ class Q_Character_Trainer(CharacterEntity):
         return counter
 
     def done(self, wrld):
+        delta = self.get_delta(wrld, True)
+        self.update_weights(wrld, delta)
         self.save_q_table()
+        self.state_eval.save_weights()

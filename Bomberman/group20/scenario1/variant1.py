@@ -23,4 +23,7 @@ g.add_character(Q_Character_Trainer("me", "C", 0, 0))
 #))
 
 # Run!
+#for i in range(0, 100):
+g = Game.fromfile('map.txt')
+g.add_character(Q_Character_Trainer("me", "C", 0, 0))
 g.go()

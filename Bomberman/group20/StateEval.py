@@ -1,3 +1,5 @@
+import csv
+
 
 class StateEval:
     def __init__(self, w1,w2,w3,w4, w5):
@@ -6,8 +8,28 @@ class StateEval:
         self.w3 = w3
         self.w4 = w4
         self.w5 = w5
+        try:
+            self.load_weights()
+        except:
+            print("OOOOOOOOOOOH NOOOOOOOOOOOOOOOOOO")
 
-    def update_weights(self,w,alpha,delta,world,character,score1, score2=None):
+    def save_weights(self):
+        with open('weights.csv', 'w+', newline='') as file:
+            writer = csv.writer(file)
+            weights = [self.w1, self.w2, self.w3, self.w4, self.w5]
+            writer.writerow(weights)
+
+    def load_weights(self):
+        with open('weights.csv', 'r+', newline='') as file:
+            reader = csv.reader(file)
+            for row in reader: #should make not a loop but I copy pasted from q_char_trainer
+                self.w1 = float(row[0])
+                self.w2 = float(row[1])
+                self.w3 = float(row[2])
+                self.w4 = float(row[3])
+                self.w5 = float(row[4])
+
+    def update_weights(self,w,alpha,delta,world,character,score1, goal, score2=None):
         """
 
         :param w:
@@ -19,16 +41,17 @@ class StateEval:
         :param score2:
         :return:
         """
+        #print(delta)
         if w == 1:
             self.w1 = self.w1 + alpha*delta*self.is_death_near(score1,score2,world,character)
         elif w == 2:
             self.w2 = self.w2 + alpha*delta*self.is_stalked(score1,world,character)
         elif w == 3:
-            self.w3 = self.w3 + alpha*delta*self.dist_goal(score1,world,character)
+            self.w3 = self.w3 + alpha*delta*self.dist_goal(score1,goal,character)
         elif w == 4:
             self.w4 = self.w4 + alpha*delta*self.at_explosion(score1,world,character)
         elif w == 5:
-            self.w5 = self.w5 + alpha * delta * self.bomb_placement(score1, world, character)
+            self.w5 = self.w5 + alpha * delta * self.bomb_placement(score1, world)
 
     def is_death_near(self,score1,score2,world,character):
         """
@@ -140,8 +163,9 @@ class StateEval:
 
         if pos is not None:
             for dy in range(1, 5):
-                if world.wall_at(pos[0], pos[1] + dy):
-                    return score
+                if(pos[1] + dy < world.height()):
+                    if world.wall_at(pos[0], pos[1] + dy):
+                        return score
         return 0
 
     def evaluate_state(self,s1,s2,s3,s4,s5,s6,world,goal,character):
@@ -161,5 +185,6 @@ class StateEval:
         val3 = self.dist_goal(s4,goal,character)
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
+        print("state stuff: ", val1, val2, val3, val4, val5)
         final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4)+(self.w5*val5))
         return final_val
