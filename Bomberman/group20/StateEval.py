@@ -126,7 +126,10 @@ class StateEval:
         y_diff = goal[1] - character.y
         sq_dist = x_diff * x_diff + y_diff * y_diff
         dist = sq_dist**.5
-        return dist * score1
+        if(dist != 0):
+            return (1/dist) * score1
+        else:
+            return (1/.0000000001) * score1 #just shitposting with this one
 
     def at_explosion(self,score1,world,character):
         """
@@ -139,9 +142,20 @@ class StateEval:
         x = character.x
         y = character.y
         val = 0
+        pos = None
+        for x in range(world.width()):
+            for y in range(world.height()):
+                if world.bomb_at(x, y):
+                    pos = [x, y]
+                    break
+            else:
+                continue
+            break
 
-        if world.bomb_time != -1:
-            val += score1
+            if(pos != None):
+                if(pos[0] == x or pos[1] == y):
+                    val += score1
+
         return val
 
     def bomb_placement(self, score, world):

@@ -113,8 +113,10 @@ class Q_Character_Trainer(CharacterEntity):
         self.evaluate_q_state(wrld, newwrld, events, 8)
 
         rand_chance = random.random()
-        if(rand_chance > 0.8):
+        if(rand_chance > 0.2):
             self.make_best_move(self.generate_state_id(wrld), wrld)
+        #elif(rand_chance < 0.1):
+        #    self.make_worst_move(self.generate_state_id(wrld), wrld)
         else:
             rand_action = random.randint(0, 8)
             self.make_a_move(rand_action)
@@ -136,6 +138,19 @@ class Q_Character_Trainer(CharacterEntity):
                 pass
         self.make_a_move(max_index)
 
+    def make_worst_move(self, board_state, wrld):
+        moves = self.q_table.get(board_state)
+        minimum = moves[0]
+        min_index = 0
+        for i in range(0, len(moves)):
+            try:
+                if moves[i] < minimum:
+                    if (self.is_legal_move(wrld, i)):
+                        minimum = moves[i]
+                        min_index = i
+            except:
+                pass
+        self.make_a_move(min_index)
     def is_legal_move(self, wrld, action):
         if(action == 0):
             if(self.y + 1 < wrld.height() and (not wrld.wall_at(self.x, self.y + 1))):
@@ -200,11 +215,13 @@ class Q_Character_Trainer(CharacterEntity):
         elif move_index == 8:
             self.place_bomb()
 
-    def get_delta(self,world, dead=False):
+    def get_delta(self,world):
         """
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
+        dead = False
+
         if(not dead):
             r = world.scores.get(self.name) - self.old_score
             self.old_score = world.scores.get(self.name)
@@ -251,7 +268,8 @@ class Q_Character_Trainer(CharacterEntity):
 
     def evaluate_q_state(self, wrld, newwrld, events, action):
         '''
-        :param wrld: World : The world state to evaluate
+        :param wrld: World : The world st
+        ate to evaluate
         :param events: The events that just occured in this state
         :param action: The action just taken
         Evaluates the state that the character is in based on X factors:
@@ -274,8 +292,6 @@ class Q_Character_Trainer(CharacterEntity):
             print(action)
             all_values[action] = value
             self.q_table[state_id] = all_values
-
-
 
     def save_q_table(self):
         '''
@@ -309,7 +325,7 @@ class Q_Character_Trainer(CharacterEntity):
         y_dist = float(self.goal[1] - self.y)
         sq_dist = x_dist*x_dist + y_dist*y_dist
         if(sq_dist != 0):
-            return int(1/sq_dist)
+            return int(sq_dist)
         else:
             return 0
 
@@ -369,11 +385,6 @@ class Q_Character_Trainer(CharacterEntity):
         except:
             print("couldn't find q table")
 
-
-
-
-
-
     def get_num_monsters_nearby(self, wrld):
         '''
         Get the number of monsters within a 2 block square
@@ -396,7 +407,7 @@ class Q_Character_Trainer(CharacterEntity):
         return counter
 
     def done(self, wrld):
-        delta = self.get_delta(wrld, True)
-        self.update_weights(wrld, delta)
+        #delta = self.get_delta(wrld)
+        #self.update_weights(wrld, delta)
         self.save_q_table()
         self.state_eval.save_weights()
