@@ -7,21 +7,22 @@ from colorama import Fore, Back
 from StateEval import StateEval
 import csv
 import math
+sys.path.insert(1, '../group20')
 
-
-EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None]
+EMPTY_ACTION_SET = [None, None, None, None, None, None, None, None, None]
 
 
 class Q_Character_Trainer(CharacterEntity):
 
     def __init__(self, name, avatar, x, y):
-        CharacterEntity.__init__(name, avatar, x, y)
+        #print(name, avatar, x, y)
+        super().__init__(name, avatar, x, y)
+        #CharacterEntity.__init__(name, avatar, x, y)
         # Whether this character wants to place a bomb
         self.maybe_place_bomb = False
         # Debugging elements
         self.tiles = {}
-
-        self.q_table = self.load_q_table()
+        self.load_q_table()
         self.state_eval = StateEval(3,3,3,3,3)
         #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
@@ -35,7 +36,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
-        self.old_score =
+        self.old_score = 0
 
     def do(self, wrld):
         '''
@@ -45,8 +46,8 @@ class Q_Character_Trainer(CharacterEntity):
         '''
         # TODO make it do
         if self.goal is None:
-            for x in range(wrld.width):
-                for y in range(wrld.height):
+            for x in range(wrld.width()):
+                for y in range(wrld.height()):
                     if wrld.exit_at(x, y):
                         self.goal = [x, y]
                         break
@@ -100,7 +101,7 @@ class Q_Character_Trainer(CharacterEntity):
                                 m.move(dx, dy)
                                 # Get new world
                                 (newwrld, events) = wrld.next()
-                                self.evaluate_q_state(newwrld, events, action)
+                                self.evaluate_q_state(wrld, newwrld, events, action)
 
 
         #Check Bomb
@@ -108,7 +109,38 @@ class Q_Character_Trainer(CharacterEntity):
         m.place_bomb()
         # Get new world
         (newwrld, events) = wrld.next()
-        self.evaluate_q_state(newwrld, events, 8)
+        self.evaluate_q_state(wrld, newwrld, events, 8)
+
+        self.make_best_move(self.generate_state_id(wrld))
+
+    def make_best_move(self, board_state):
+        moves = self.q_table.get(board_state)
+        maximum = moves[0]
+        max_index = 0
+        for i in range(0, len(moves)):
+            try:
+                if moves[i] > maximum:
+                    max_index = i
+            except:
+                pass
+        if max_index == 0:
+            self.move(0, 1)
+        elif max_index == 1:
+            self.move(1, 1)
+        elif max_index == 2:
+            self.move(1, 0)
+        elif max_index == 3:
+            self.move(1, -1)
+        elif max_index == 4:
+            self.move(0, -1)
+        elif max_index == 5:
+            self.move(-1, -1)
+        elif max_index == 6:
+            self.move(-1, 0)
+        elif max_index == 7:
+            self.move(-1, 1)
+        elif max_index == 8:
+            self.place_bomb()
 
 
 
@@ -143,7 +175,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6)
 
 
-    def evaluate_q_state(self, wrld, events, action):
+    def evaluate_q_state(self, wrld, newwrld, events, action):
         '''
         :param wrld: World : The world state to evaluate
         :param events: The events that just occured in this state
@@ -155,7 +187,7 @@ class Q_Character_Trainer(CharacterEntity):
         ADD MORE AS NEEDED
         :return: void
         '''
-        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, wrld, self.goal, self)
+        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, newwrld, self.goal, self)
 
         state_id = self.generate_state_id(wrld)
         if(state_id in self.q_table):
@@ -165,6 +197,7 @@ class Q_Character_Trainer(CharacterEntity):
             self.q_table[state_id] = all_values
         else:
             all_values = EMPTY_ACTION_SET
+            print(action)
             all_values[action] = value
             self.q_table[state_id] = all_values
 
@@ -175,12 +208,15 @@ class Q_Character_Trainer(CharacterEntity):
         saves the q-table to a local storage
         :return: void
         '''
-        with open('q_table.csv', 'w', newline='') as file:
-            writer = csv.writer(file, 'w', delimiter=',', newline='')
+        with open('q_table.csv', 'w+', newline='') as file:
+            writer = csv.writer(file)
             for key in self.q_table:
                 values = self.q_table.get(key)
-                writer.writerow(key, values[0], values[1], values[2], values[3],
-                                values[4], values[5], values[6], values[7], values[8])
+                all_values = []
+                all_values.append(key)
+                for i in range(0, len(values)):
+                    all_values.append(values[i])
+                writer.writerow(all_values)
 
     def generate_state_id(self, world):
         state_id = ""
@@ -207,7 +243,7 @@ class Q_Character_Trainer(CharacterEntity):
                 num_walls += 1
             if world.wall_at(self.x + d, self.y):
                 num_walls += 1
-            if world.wall_at(self.x - d, self.y)
+            if world.wall_at(self.x - d, self.y):
                 num_walls += 1
         return num_walls
 
@@ -239,11 +275,16 @@ class Q_Character_Trainer(CharacterEntity):
         loads the q-table from local storage
         :return dictionary: dictionary for the q-table
         '''
-        q_table = {} #default empty dictionary if not loaded from save
-        with open('q_table.csv', 'w', newlilne='') as file:
-            reader = csv.reader(file, delimiter=',')
-            for row in reader:
-                q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+        self.q_table = {} #default empty dictionary if not loaded from save
+        try:
+            with open('q_table.csv', 'r+') as file:
+                reader = csv.reader(file, delimiter=',')
+                for row in reader:
+                    self.q_table[row[0]] = list(row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8], row[9])
+        except:
+            pass
+
+
 
 
     def get_num_monsters_nearby(self, wrld):
@@ -267,5 +308,5 @@ class Q_Character_Trainer(CharacterEntity):
 
         return counter
 
-    def done(self):
+    def done(self, wrld):
         self.save_q_table()

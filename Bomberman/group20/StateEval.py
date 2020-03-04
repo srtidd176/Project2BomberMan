@@ -1,10 +1,11 @@
 
 class StateEval:
-    def __init__(self, w1,w2,w3,w4):
+    def __init__(self, w1,w2,w3,w4, w5):
         self.w1 = w1
         self.w2 = w2
         self.w3 = w3
         self.w4 = w4
+        self.w5 = w5
 
     def update_weights(self,w,alpha,delta,world,character,score1, score2=None):
         """
@@ -115,7 +116,8 @@ class StateEval:
         x = character.x
         y = character.y
         val = 0
-        if world.explosion_at(x, y) != None:
+
+        if world.bomb_time != -1:
             val += score1
         return val
 
