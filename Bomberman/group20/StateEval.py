@@ -216,6 +216,6 @@ class StateEval:
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
         val6 = self.num_possible_moves(world, character)
-        print("state stuff: ", val1, val2, val3, val4, val5)
         final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4)+(self.w5*val5)+(self.w6*val6))
+
         return final_val

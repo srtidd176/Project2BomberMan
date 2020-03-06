@@ -28,7 +28,7 @@ class Q_Character_Trainer(CharacterEntity):
         #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
         self.discount = 0.5
-        self.score1 = 10  # Score for being on same spot as a monster
+        self.score1 = 1  # Score for being on same spot as a monster
         self.score2 = 1  # Score for being in attack distance from monster
         self.score3 = 1  # Score for bring in stalk distance from monster
         self.score4 = 1  # Score based on how close the character is to the goal
@@ -46,6 +46,7 @@ class Q_Character_Trainer(CharacterEntity):
         :param wrld: the game state
         :return: void
         '''
+        self.turn_number += 1
         # TODO make it do
         if self.goal is None:
             for x in range(wrld.width()):
@@ -107,28 +108,45 @@ class Q_Character_Trainer(CharacterEntity):
 
 
         #Check Bomb
-        #TODO figure out place bomb
         m.place_bomb()
         # Get new world
         (newwrld, events) = wrld.next()
         self.evaluate_q_state(wrld, newwrld, events, 8)
 
+
+
+        best_move = self.get_best_move(self.generate_state_id(wrld), wrld)
+        worst_move = self.get_worst_move(self.generate_state_id(wrld), wrld)
         rand_chance = random.random()
         if(rand_chance > 0.4):
-            self.make_best_move(self.generate_state_id(wrld), wrld)
+            if(best_move == 8):
+                self.place_bomb()
+                self.do(wrld)
+            else:
+                self.make_a_move(best_move)
+
         elif(rand_chance < 0.1):
-            self.make_worst_move(self.generate_state_id(wrld), wrld)
+            if (worst_move == 8):
+                self.place_bomb()
+                self.do()
+            else:
+                self.make_a_move(worst_move)
         else:
             rand_action = random.randint(0, 8)
-            self.make_a_move(rand_action)
+            if(rand_action == 8):
+                self.place_bomb()
+                self.do(wrld)
+            else:
+                self.make_a_move(rand_action)
 
         delta = self.get_delta(wrld)
         self.update_weights(wrld, delta)
 
-    def make_best_move(self, board_state, wrld):
+    def get_best_move(self, board_state, wrld):
         moves = self.q_table.get(board_state)
         maximum = moves[0]
         max_index = 0
+
         for i in range(0, len(moves)):
             try:
                 if moves[i] > maximum:
@@ -137,9 +155,16 @@ class Q_Character_Trainer(CharacterEntity):
                         max_index = i
             except:
                 pass
-        self.make_a_move(max_index)
 
-    def make_worst_move(self, board_state, wrld):
+        if max_index == 0 and (not self.is_legal_move(wrld, max_index)):
+            for i in range(1, 7):
+                if self.is_legal_move(wrld, i):
+                    max_index = i
+                    break
+
+        return max_index
+
+    def get_worst_move(self, board_state, wrld):
         moves = self.q_table.get(board_state)
         minimum = moves[0]
         min_index = 0
@@ -151,7 +176,8 @@ class Q_Character_Trainer(CharacterEntity):
                         min_index = i
             except:
                 pass
-        self.make_a_move(min_index)
+        return min_index
+
     def is_legal_move(self, wrld, action):
         if(action == 0):
             if(self.y + 1 < wrld.height() and (not wrld.wall_at(self.x, self.y + 1))):
@@ -159,17 +185,17 @@ class Q_Character_Trainer(CharacterEntity):
             else:
                 return False
         elif(action == 1):
-            if (self.y + 1 < wrld.height() and self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y + 1))):
+            if (self.y + 1 < wrld.height() and self.x + 1 < wrld.width() and (not wrld.wall_at(self.x + 1, self.y + 1))):
                 return True
             else:
                 return False
         elif(action == 2):
-            if (self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y ))):
+            if (self.x + 1 < wrld.width() and (not wrld.wall_at(self.x + 1, self.y ))):
                 return True
             else:
                 return False
         elif(action == 3):
-            if (self.y - 1 >= 0 and self.x < wrld.width() and (not wrld.wall_at(self.x + 1, self.y - 1))):
+            if (self.y - 1 >= 0 and self.x + 1< wrld.width() and (not wrld.wall_at(self.x + 1, self.y - 1))):
                 return True
             else:
                 return False
@@ -221,13 +247,11 @@ class Q_Character_Trainer(CharacterEntity):
         Gets the delta used for updating weights
         :return: a float of the difference between states
         """
-        dead = False
 
-        if(not dead):
-            r = world.scores.get(self.name) - self.old_score
-            self.old_score = world.scores.get(self.name)
-        else:
-            r = -9999
+        r = world.scores.get(self.name) - self.old_score
+
+        self.old_score = world.scores.get(self.name)
+
         state_id = self.generate_state_id(world)
 
         all_values = self.q_table.get(state_id)
