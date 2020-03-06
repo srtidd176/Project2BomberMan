@@ -68,8 +68,11 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
-        x = character.x
-        y = character.y
+        if character is not None:
+            x = character.x
+            y = character.y
+        else:
+            return -999
         val = 0
         if world.monsters_at(x,y) != None:
             val += score1
@@ -99,8 +102,11 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
-        x = character.x
-        y = character.y
+        if character is not None:
+            x = character.x
+            y = character.y
+        else:
+            return -999
         val = 0
         if world.monsters_at(x, y + 2) != None:
             val += score1
@@ -128,23 +134,41 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
+        if character is not None:
+            m_x = character.x
+            m_y = character.y
+        else:
+            return -999
         if self.path is None:
-            astar = AStar([character.x, character.y], goal, world, False)
+            astar = AStar([m_x, m_y], goal, world, False)
             self.path = astar.a_star()
         position_val = 0
         multiplier = 1
         minimum_dist = 1
+        blocked_positions = []
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                if [x, y] != [0, 0]:
+                    nx = m_x + x
+                    ny = m_y + y
+                    if 0 < nx < world.width() and 0 < ny < world.height() and world.wall_at(nx, ny):
+                        blocked_positions.append([m_x + 2 * x, m_y + 2 * y])
+                        blocked_positions.append([m_x + 3 * x, m_y + 3 * y])
+
         while position_val == 0:
             for point in self.path:
-                x_diff = point[0] - character.x
-                y_diff = point[1] - character.y
-                sq_dist = x_diff * x_diff + y_diff * y_diff
-                lin_dist = sq_dist**.5
-                if 0 < lin_dist <= minimum_dist:
-                    position_val += (1.0 / lin_dist) * multiplier
+                if not blocked_positions.__contains__(point):
+                    x_diff = point[0] - m_x
+                    y_diff = point[1] - m_y
+                    sq_dist = x_diff * x_diff + y_diff * y_diff
+                    lin_dist = sq_dist**.5
+                    if 0 < lin_dist <= minimum_dist:
+                        position_val += (1.0 / lin_dist) * multiplier
                 multiplier += 1
             minimum_dist += 1
 
+        val = (1 / position_val) * score1
+        print("val at " + str(m_x) + ", " + str(m_y) + " is " + str(val))
         return (1 / position_val) * score1
         """
         if dist != 0:
@@ -161,8 +185,11 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
-        x = character.x
-        y = character.y
+        if character is not None:
+            x = character.x
+            y = character.y
+        else:
+            return -999
         val = 0
         pos = None
         for x in range(world.width()):
@@ -205,6 +232,8 @@ class StateEval:
         return 0
 
     def num_possible_moves(self, wrld, character):
+        if character is None:
+            return -999
         counter = 0
         for x in range(character.x-1, character.x+1):
             for y in range(character.y-1, character.y-1):
@@ -228,12 +257,13 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
+        print("Evalutating state")
         val1 = self.is_death_near(s1,s2,world,character)
         val2 = self.is_stalked(s3,world,character)
         val3 = self.dist_goal(s4,goal,character, world)
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
         val6 = self.num_possible_moves(world, character)
-        print("state stuff: ", val1, val2, val3, val4, val5)
         final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4)+(self.w5*val5)+(self.w6*val6))
+
         return final_val
