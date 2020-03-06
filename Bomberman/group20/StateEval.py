@@ -2,12 +2,13 @@ import csv
 
 
 class StateEval:
-    def __init__(self, w1,w2,w3,w4, w5):
+    def __init__(self, w1,w2,w3,w4, w5,w6):
         self.w1 = w1
         self.w2 = w2
         self.w3 = w3
         self.w4 = w4
         self.w5 = w5
+        self.w6=w6
         try:
             self.load_weights()
         except:
@@ -16,7 +17,7 @@ class StateEval:
     def save_weights(self):
         with open('weights.csv', 'w+', newline='') as file:
             writer = csv.writer(file)
-            weights = [self.w1, self.w2, self.w3, self.w4, self.w5]
+            weights = [self.w1, self.w2, self.w3, self.w4, self.w5, self.w6]
             writer.writerow(weights)
 
     def load_weights(self):
@@ -28,6 +29,7 @@ class StateEval:
                 self.w3 = float(row[2])
                 self.w4 = float(row[3])
                 self.w5 = float(row[4])
+                self.w6 = float(row[5])
 
     def update_weights(self,w,alpha,delta,world,character,score1, goal, score2=None):
         """
@@ -52,6 +54,8 @@ class StateEval:
             self.w4 = self.w4 + alpha*delta*self.at_explosion(score1,world,character)
         elif w == 5:
             self.w5 = self.w5 + alpha * delta * self.bomb_placement(score1, world)
+        elif w == 6:
+            self.w6 = self.w6 + alpha * delta * self.num_possible_moves(world, character)
 
     def is_death_near(self,score1,score2,world,character):
         """
@@ -152,9 +156,9 @@ class StateEval:
                 continue
             break
 
-            if(pos != None):
-                if(pos[0] == x or pos[1] == y):
-                    val += score1
+        if(pos != None):
+            if(pos[0] == x or pos[1] == y):
+                val += score1
 
         return val
 
@@ -182,7 +186,19 @@ class StateEval:
                         return score
         return 0
 
-    def evaluate_state(self,s1,s2,s3,s4,s5,s6,world,goal,character):
+    def num_possible_moves(self, wrld, character):
+        counter = 0
+        for x in range(character.x-1, character.x+1):
+            for y in range(character.y-1, character.y-1):
+                if x < 0 or x > wrld.width():
+                    counter += 1
+                elif y < 0 or y > wrld.width():
+                    counter += 1
+                elif(wrld.wall_at(x,y)):
+                    counter += 1
+        return counter
+
+    def evaluate_state(self,s1,s2,s3,s4,s5,s6,s7,world,goal,character):
         """
         Returns the total score of the evaluated world state
         :param s1: value given that an enemy at the same same space as character
@@ -199,6 +215,7 @@ class StateEval:
         val3 = self.dist_goal(s4,goal,character)
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
+        val6 = self.num_possible_moves(world, character)
         print("state stuff: ", val1, val2, val3, val4, val5)
-        final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4)+(self.w5*val5))
+        final_val = int((self.w1*val1)+(self.w2*val2)+(self.w3*val3)+(self.w4*val4)+(self.w5*val5)+(self.w6*val6))
         return final_val

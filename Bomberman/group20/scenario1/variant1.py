@@ -23,7 +23,11 @@ g.add_character(Q_Character_Trainer("me", "C", 0, 0))
 #))
 
 # Run!
-for i in range(0, 1000):
+count = 0
+for i in range(0, 100):
+    print("start")
     g = Game.fromfile('map.txt')
     g.add_character(Q_Character_Trainer("me", "C", 0, 0))
-    g.go()
+    count += g.go()
+
+print("Number won: ", count)

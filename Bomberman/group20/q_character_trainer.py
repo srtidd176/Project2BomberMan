@@ -24,16 +24,17 @@ class Q_Character_Trainer(CharacterEntity):
         # Debugging elements
         self.tiles = {}
         self.load_q_table()
-        self.state_eval = StateEval(3,3,3,3,3)
+        self.state_eval = StateEval(3,3,3,3,3,3)
         #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
-        self.discount = 1.0
+        self.discount = 0.5
         self.score1 = 10  # Score for being on same spot as a monster
         self.score2 = 1  # Score for being in attack distance from monster
         self.score3 = 1  # Score for bring in stalk distance from monster
         self.score4 = 1  # Score based on how close the character is to the goal
         self.score5 = 1  # Score for being on an explosion
         self.score6 = 1  # Score for optimal bomb placement
+        self.score7 = 1
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
@@ -113,10 +114,10 @@ class Q_Character_Trainer(CharacterEntity):
         self.evaluate_q_state(wrld, newwrld, events, 8)
 
         rand_chance = random.random()
-        if(rand_chance > 0.2):
+        if(rand_chance > 0.4):
             self.make_best_move(self.generate_state_id(wrld), wrld)
-        #elif(rand_chance < 0.1):
-        #    self.make_worst_move(self.generate_state_id(wrld), wrld)
+        elif(rand_chance < 0.1):
+            self.make_worst_move(self.generate_state_id(wrld), wrld)
         else:
             rand_action = random.randint(0, 8)
             self.make_a_move(rand_action)
@@ -231,7 +232,7 @@ class Q_Character_Trainer(CharacterEntity):
 
         all_values = self.q_table.get(state_id)
         current_state_val = self.state_eval.evaluate_state(
-            self.score1,self.score2,self.score3,self.score4,self.score5,self.score6,world,self.goal,self)
+            self.score1,self.score2,self.score3,self.score4,self.score5,self.score6,self.score7,world,self.goal,self)
         #max_index = all_values.index(max(all_values))
 
         max_val = all_values[0]
@@ -264,7 +265,7 @@ class Q_Character_Trainer(CharacterEntity):
         self.state_eval.update_weights(3,self.alpha,delta,world,self,self.score4, self.goal)
         self.state_eval.update_weights(4,self.alpha,delta,world,self,self.score5, self.goal)
         self.state_eval.update_weights(5,self.alpha,delta,world,self,self.score6, self.goal)
-
+        self.state_eval.update_weights(6, self.alpha, delta, world, self, self.score7, self.goal)
 
     def evaluate_q_state(self, wrld, newwrld, events, action):
         '''
@@ -279,7 +280,7 @@ class Q_Character_Trainer(CharacterEntity):
         ADD MORE AS NEEDED
         :return: void
         '''
-        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, newwrld, self.goal, self)
+        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, self.score7, newwrld, self.goal, self)
 
         state_id = self.generate_state_id(wrld)
         if(state_id in self.q_table):
