@@ -28,13 +28,13 @@ class Q_Character_Trainer(CharacterEntity):
         #TODO make alpha real. Alright now alpha is a little bit real but like might suck
         self.alpha = 1.0
         self.discount = 0.5
-        self.score1 = 10  # Score for being on same spot as a monster
-        self.score2 = 1  # Score for being in attack distance from monster
-        self.score3 = 1  # Score for bring in stalk distance from monster
+        self.score1 = 0  # Score for being on same spot as a monster
+        self.score2 = 0  # Score for being in attack distance from monster
+        self.score3 = 0  # Score for bring in stalk distance from monster
         self.score4 = 1  # Score based on how close the character is to the goal
-        self.score5 = 1  # Score for being on an explosion
-        self.score6 = 1  # Score for optimal bomb placement
-        self.score7 = 1
+        self.score5 = 0  # Score for being on an explosion
+        self.score6 = 0  # Score for optimal bomb placement
+        self.score7 = 0
         self.alpha_constant = 1
         self.turn_number = 0
         self.goal = None
@@ -108,7 +108,7 @@ class Q_Character_Trainer(CharacterEntity):
 
         #Check Bomb
         #TODO figure out place bomb
-        m.place_bomb()
+        #m.place_bomb()
         # Get new world
         (newwrld, events) = wrld.next()
         self.evaluate_q_state(wrld, newwrld, events, 8)
@@ -152,6 +152,7 @@ class Q_Character_Trainer(CharacterEntity):
             except:
                 pass
         self.make_a_move(min_index)
+
     def is_legal_move(self, wrld, action):
         if(action == 0):
             if(self.y + 1 < wrld.height() and (not wrld.wall_at(self.x, self.y + 1))):
@@ -193,6 +194,8 @@ class Q_Character_Trainer(CharacterEntity):
                 return True
             else:
                 return False
+        elif action == 8:
+            return False
 
         return False
 
@@ -214,7 +217,8 @@ class Q_Character_Trainer(CharacterEntity):
         elif move_index == 7:
             self.move(-1, 1)
         elif move_index == 8:
-            self.place_bomb()
+            #self.place_bomb()
+            pass
 
     def get_delta(self,world):
         """
@@ -251,7 +255,6 @@ class Q_Character_Trainer(CharacterEntity):
         delta = (r + self.discount * all_values[max_index]) - current_state_val
         print("delta stuff: ", r, self.discount, all_values[max_index], current_state_val, delta)
         return delta
-
 
     def update_weights(self,world,delta):
         """

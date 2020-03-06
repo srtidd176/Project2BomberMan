@@ -1,5 +1,6 @@
 import csv
 
+from AStar import AStar
 
 class StateEval:
     def __init__(self, w1,w2,w3,w4, w5,w6):
@@ -13,6 +14,7 @@ class StateEval:
             self.load_weights()
         except:
             print("OOOOOOOOOOOH NOOOOOOOOOOOOOOOOOO")
+        self.path = None
 
     def save_weights(self):
         with open('weights.csv', 'w+', newline='') as file:
@@ -49,7 +51,7 @@ class StateEval:
         elif w == 2:
             self.w2 = self.w2 + alpha*delta*self.is_stalked(score1,world,character)
         elif w == 3:
-            self.w3 = self.w3 + alpha*delta*self.dist_goal(score1,goal,character)
+            self.w3 = self.w3 + alpha*delta*self.dist_goal(score1,goal,character, world)
         elif w == 4:
             self.w4 = self.w4 + alpha*delta*self.at_explosion(score1,world,character)
         elif w == 5:
@@ -118,7 +120,7 @@ class StateEval:
             val += score1
         return val
 
-    def dist_goal(self,score1,goal,character):
+    def dist_goal(self,score1,goal,character, world):
         """
         Returns the world score based on if the character is at or next to the goal
         :param score1: value given that the character is at or next to the goal for a range of 2
@@ -126,14 +128,30 @@ class StateEval:
         :param character: the player to evaluate
         :return: an integer score value
         """
-        x_diff = goal[0] - character.x
-        y_diff = goal[1] - character.y
-        sq_dist = x_diff * x_diff + y_diff * y_diff
-        dist = sq_dist**.5
-        if(dist != 0):
+        if self.path is None:
+            astar = AStar([character.x, character.y], goal, world, False)
+            self.path = astar.a_star()
+        position_val = 0
+        multiplier = 1
+        minimum_dist = 1
+        while position_val == 0:
+            for point in self.path:
+                x_diff = point[0] - character.x
+                y_diff = point[1] - character.y
+                sq_dist = x_diff * x_diff + y_diff * y_diff
+                lin_dist = sq_dist**.5
+                if 0 < lin_dist <= minimum_dist:
+                    position_val += (1.0 / lin_dist) * multiplier
+                multiplier += 1
+            minimum_dist += 1
+
+        return (1 / position_val) * score1
+        """
+        if dist != 0:
             return (1/dist) * score1
         else:
             return (1/.0000000001) * score1 #just shitposting with this one
+        """
 
     def at_explosion(self,score1,world,character):
         """
@@ -212,7 +230,7 @@ class StateEval:
         """
         val1 = self.is_death_near(s1,s2,world,character)
         val2 = self.is_stalked(s3,world,character)
-        val3 = self.dist_goal(s4,goal,character)
+        val3 = self.dist_goal(s4,goal,character, world)
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
         val6 = self.num_possible_moves(world, character)

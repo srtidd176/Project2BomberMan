@@ -32,7 +32,7 @@ class AStar:
             for child in children:
                 if self.debug:
                     print("checking_child: " + str(child))
-                g = current_node.g + self.__move_val(child[0], child[1], self.wrld)
+                g = current_node.g + self.__move_val(current_node, child[0], child[1], self.wrld)
                 h = math.sqrt(math.pow(self.goal[0] - child[0], 2) + math.pow(self.goal[1] - child[1], 2))
                 child_node = Node(g, h, g + h, child[0], child[1], current_node)
                 if not self.__already_has_node(child_node, close_pos):
@@ -72,9 +72,12 @@ class AStar:
                     potential_children.append([n_x, n_y])
         return potential_children
 
-    def __move_val(self, x, y, wrld):
+    def __move_val(self, origin, x, y, wrld):
         if wrld.empty_at(x,y):
-            return 1
+            if origin.x == x or origin.y == y:
+                return 1
+            else:
+                return 1
         else:
             return 999
 
