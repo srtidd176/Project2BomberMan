@@ -143,7 +143,7 @@ class StateEval:
             astar = AStar([m_x, m_y], goal, world, False)
             self.path = astar.a_star()
         position_val = 0
-        multiplier = 1
+        multiplier = len(self.path)
         minimum_dist = 1
         blocked_positions = []
         for x in range(-1, 2):
@@ -164,18 +164,12 @@ class StateEval:
                     lin_dist = sq_dist**.5
                     if 0 < lin_dist <= minimum_dist:
                         position_val += (1.0 / lin_dist) * multiplier
-                multiplier += 1
+                multiplier -= 1
             minimum_dist += 1
 
-        val = (1 / position_val) * score1
+        val = position_val * score1
         print("val at " + str(m_x) + ", " + str(m_y) + " is " + str(val))
         return (1 / position_val) * score1
-        """
-        if dist != 0:
-            return (1/dist) * score1
-        else:
-            return (1/.0000000001) * score1 #just shitposting with this one
-        """
 
     def at_explosion(self,score1,world,character):
         """
@@ -260,7 +254,8 @@ class StateEval:
         print("Evalutating state")
         val1 = self.is_death_near(s1,s2,world,character)
         val2 = self.is_stalked(s3,world,character)
-        val3 = self.dist_goal(s4,goal,character, world)
+        #val3 = self.dist_goal(s4,goal,character, world)
+        val3 = self.go_along_path(s4, goal, character, world)
         val4 = self.at_explosion(s5,world,character)
         val5 = self.bomb_placement(s6, world)
         val6 = self.num_possible_moves(world, character)

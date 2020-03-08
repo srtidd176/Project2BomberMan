@@ -146,6 +146,12 @@ class Q_Character_Trainer(CharacterEntity):
         self.update_weights(wrld, delta)
 
     def get_best_move(self, board_state, wrld):
+        """
+        Returns the best possible move at the current world state
+        :param board_state: state of the board. Used to get the Q learning values
+        :param wrld:
+        :return:
+        """
         moves = self.q_table.get(board_state)
         maximum = moves[0]
         max_index = 0
@@ -168,6 +174,12 @@ class Q_Character_Trainer(CharacterEntity):
         return max_index
 
     def get_worst_move(self, board_state, wrld):
+        """
+        Returns the worst possible move at the current world state
+        :param board_state: state of the board. Used to get the Q learning values
+        :param wrld: current world
+        :return: move action index
+        """
         moves = self.q_table.get(board_state)
         minimum = moves[0]
         min_index = 0
@@ -183,6 +195,12 @@ class Q_Character_Trainer(CharacterEntity):
         return min_index
 
     def is_legal_move(self, wrld, action):
+        """
+        checks if the given action is legal/possible in the world
+        :param wrld: current world state before action
+        :param action: the action the character (self) will take in the world.
+        :return: Boolean of whether the action is legal or not
+        """
         if(action == 0):
             if(self.y + 1 < wrld.height() and (not wrld.wall_at(self.x, self.y + 1))):
                 return True
@@ -229,6 +247,11 @@ class Q_Character_Trainer(CharacterEntity):
         return False
 
     def make_a_move(self, move_index):
+        """
+        sets the character to move based on the move index
+        :param move_index: int from 0 - 8 to determine an action
+        :return:
+        """
         if move_index == 0:
             self.move(0, 1)
         elif move_index == 1:
@@ -310,7 +333,7 @@ class Q_Character_Trainer(CharacterEntity):
         ADD MORE AS NEEDED
         :return: void
         '''
-        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, self.score7, newwrld, self.goal, newwrld.me(self)) # TODO is this the right self?
+        value = self.state_eval.evaluate_state(self.score1, self.score2, self.score3, self.score4, self.score5, self.score6, self.score7, newwrld, self.goal, newwrld.me(self))
 
         state_id = self.generate_state_id(wrld)
         if(state_id in self.q_table):
@@ -438,6 +461,11 @@ class Q_Character_Trainer(CharacterEntity):
         return counter
 
     def done(self, wrld):
+        """
+        saves the current qtable and weights to be used for the next game iteration
+        :param wrld:
+        :return:
+        """
         #delta = self.get_delta(wrld)
         #self.update_weights(wrld, delta)
         self.save_q_table()

@@ -8,26 +8,17 @@ from game import Game
 
 # TODO This is your code!
 sys.path.insert(1, '../group20')
-from q_character_trainer import Q_Character_Trainer
+from testcharacter import TestCharacter
 
 
 # Create the game
 g = Game.fromfile('map.txt')
 
 # TODO Add your character
-g.add_character(Q_Character_Trainer("me", "C", 0, 0))
-
-#g.add_character(q_character_trainer("me", # name
-#                              "C",  # avatar
-#                              0, 0  # position
-#))
+g.add_character(TestCharacter("me", # name
+                              "C",  # avatar
+                              0, 0  # position
+))
 
 # Run!
-count = 0
-for i in range(0, 100):
-    print("start")
-    g = Game.fromfile('map.txt')
-    g.add_character(Q_Character_Trainer("me", "C", 0, 0))
-    count += g.go()
-
-print("Number won: ", count)
+g.go()
